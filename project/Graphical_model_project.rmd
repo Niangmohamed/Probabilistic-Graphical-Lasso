@@ -1,0 +1,236 @@
+---
+title: "Probabilistic Graphical Lasso"
+author: NIANG Mohamed
+date: "06 April 2020"
+output:
+  pdf_document: 
+    fig_caption: yes
+    highlight: haddock
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  html_document: 
+    df_print: kable
+    highlight: haddock
+    number_sections: yes
+    theme: cerulean
+    toc: yes
+---
+
+```{r setup, include=FALSE, echo=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Exercise 1: The elements of Statistical Learning
+
+## Choice of section to be read
+
+<p style='text-align: justify;'> For this part, we have chosen to read the section 17.3.2 entitled **Estimation of the Graph Structure**. </p>
+
+<p style='text-align: justify;'> Given some realizations of $X$, we would like to estimate the parameters of an undirected graph that approximates their joint distribution. Suppose
+first that the graph is complete (fully connected). We assume that we have
+$N$ multivariate normal realizations $x_i$, $i = 1,... ,N$ with population mean
+$\mu$ and covariance $\Sigma$. </p>
+
+<p style='text-align: justify;'> Let </p>
+
+$$
+\mathbf{S}=\frac{1}{N} \sum_{i=1}^{N}\left(x_{i}-\bar{x}\right)\left(x_{i}-\bar{x}\right)^{T}
+$$
+
+<p style='text-align: justify;'> be the empirical covariance matrix, with $\bar{x}$ the sample mean vector. </p>
+
+## Summary of chosen section: Estimation of the Graph Structure
+
+<p style='text-align: justify;'> The **L1 (lasso) regularization** is a way to find out from the data which **edges** should be omitted from the graph. Meinshausen et al (2006) take a lasso regression approach using each variable as a response and the others as predictors to estimate which components of $\theta_{ij}$ are non-zero. The $\theta_{ij}$ component is then estimated as non-zero if the estimated coefficient of variable $i$ on $j$ is non-zero, or inversely. This procedure makes it possible to consistently estimate all non-zero components of $\Theta$. </p>
+
+<p style='text-align: justify;'> It is possible to adopt a more systematic approach with the lasso penalty by maximizing the log-likelihood penalized </p>
+
+$$
+\log \operatorname{det} \Theta-\operatorname{trace}(\mathbf{S} \Theta)-\lambda\|\Theta\|_{1},
+$$
+<p style='text-align: justify;'> where $\|\Theta\|_{1}$ is the L1 norm - the sum of the absolute values of the elements of $\sum^{-1}$, and where constants are ignored. The negative of this penalized likelihood is a convex function of $\Theta$.</p> 
+
+<p style='text-align: justify;'> The latter system is exactly equivalent to the estimating equations of a lasso regression. Indeed, let us consider the usual regression configuration with the result variables $y$ and the predictive matrix $Z$. Here, the lasso minimizes </p> 
+
+$$
+\frac{1}{2}(\mathbf{y}-\mathbf{Z} \beta)^{T}(\mathbf{y}-\mathbf{Z} \beta)+\lambda \cdot\|\beta\|_{1}
+$$
+
+<p style='text-align: justify;'> The gradient of this expression is </p>
+
+$$
+\mathbf{Z}^{T} \mathbf{Z} \beta-\mathbf{Z}^{T} \mathbf{y}+\lambda \cdot \operatorname{Sign}(\beta)=0
+$$
+<p style="border:1px; 'text-align: left;'; border-style:solid; border-color:#000000; padding: 1em;">
+$$
+\begin{array}{l}
+\\
+\text { Algorithm Graphical Lasso } \\ 
+\\
+\text { 1. Initialize } \mathbf{W}=\mathbf{S}+\lambda \mathbf{I} \text { . The diagonal of } \mathbf{W} \text { remains unchanged in } \\
+\text { what follows. } \\
+\text { 2. Repeat for } j=1,2, \ldots p, 1,2, \ldots p, \ldots \text { until convergence: } \\
+\text { (a) Partition the matrix } \mathbf{W} \text { into part } 1: \text { all but the } j \text { th row and } \\
+\text { column, and part } 2: \text { the } j \text { th row and column. } \\
+\text { (b) Solve the estimating equations } \mathbf{W}_{11} \beta-s_{12}+\lambda \cdot \operatorname{sign}(\beta)=0 \\
+\text { using the cyclical coordinate-descent algorithm } \text { for the } \\
+\text { modified lasso. } \\
+\text { (c) Update } w_{12}=\mathbf{W}_{11} \hat{\beta} \\
+\text { 3. In the final cycle (for each } j \text { ) solve for } \hat{\theta}_{12}=-\hat{\beta} \cdot \hat{\theta}_{22}, \text { with } 1 / \hat{\theta}_{22}= \\
+w_{22}-w_{12}^{T} \hat{\beta}
+\\
+\end{array}
+$$
+</p>
+
+<p style='text-align: justify;'> Thus, up to a factor of $\frac{1}{N}$, $\mathbf{Z}^{T} \mathbf{y}$ is the analogue of $s_{12}$ and we replace $\mathbf{Z}^{T} \mathbf{Z}$ by $\mathbf{W}_{11}$. </p>
+
+<p style='text-align: justify;'> Assuming that $\mathbf{V}=\mathbf{W}_{11}$, the update has the form </p>
+
+$$
+\hat{\beta}_{j} \leftarrow S\left(s_{12 j}-\sum_{k \neq j} V_{k j} \hat{\beta}_{k}, \lambda\right) / V_{j j}
+$$
+
+<p style='text-align: justify;'> for $j=1,2, \ldots, p-1,1,2, \ldots, p-1, \ldots$, where S is the soft-threshold operator: </p>
+
+$$
+S(x, t)=\operatorname{sign}(x)(|x|-t)+
+$$
+
+
+<p style='text-align: justify;'> The procedure runs through the predictors until convergence. </p>
+
+# Exercise 2: Gaussian Graphical Model
+
+## Simulation of data using a Gaussian graphical model
+
+```{r}
+library(simone)
+```
+
+```{r}
+set.seed(2)
+```
+
+```{r}
+edges <- 11
+graphe <- rNetwork(edges, pi=0.2, name="Theoretical graph")
+```
+
+```{r}
+plot(graphe) 
+```
+
+```{r}
+data <- rTranscriptData(n=1500, graphe, sigma=0)
+```
+
+```{r}
+# Display the Sample
+head(data$X)
+```
+
+## Inference of a conditional independence graph
+
+```{r}
+simone(data$X,control = setOptions(penalties=0.1)) -> infered_net
+```
+
+```{r}
+infered_net_graph <- getNetwork(infered_net)
+infered_net_graph$name <- "Inferred graph"
+```
+
+```{r}
+plot(infered_net_graph)
+```
+
+```{r}
+## Let us compare the two networks
+plot(graphe,infered_net_graph)
+```
+
+```{r}
+plot(graphe,infered_net_graph, type="overlap")
+```
+
+```{r}
+plot(infered_net, output=c("ROC"), ref.graph=graphe$A)
+```
+
+
+**Comments:**
+
+<p style='text-align: justify;'> In terms of common edges, the inferred graph and the theoretical graph have no difference. </p>
+
+## Precision-recall curve for 100 different penalties
+
+```{r}
+simone(data$X,control=setOptions(n.penalties = 100)) -> infered_net_100
+```
+
+```{r}
+plot(infered_net_100, output=c("PR"), ref.graph=graphe$A)
+```
+
+## Inference and display of conditional independence networks
+
+```{r}
+PATH <- getwd()
+```
+
+```{r}
+setwd(dir = PATH)
+```
+
+```{r}
+# Load data
+dataset <- read.table(file.choose(), header = FALSE, sep= "", encoding="UTF-8")
+```
+
+```{r}
+# Display the Sample
+head(dataset)
+```
+
+```{r}
+simone(dataset,control=setOptions(penalties=0.2)) -> infered_net_0.2
+```
+
+```{r}
+simone(dataset,control=setOptions(penalties=0.1)) -> infered_net_0.1
+```
+
+```{r}
+infered_net_0.2 <- getNetwork(infered_net_0.2)
+infered_net_0.2$name <- "Inferred graph with penalties=0.2"
+```
+
+```{r}
+plot(infered_net_0.2)
+```
+
+```{r}
+infered_net_0.1 <- getNetwork(infered_net_0.1)
+infered_net_0.1$name <- "Inferred graph with penalties=0.1"
+```
+
+```{r}
+plot(infered_net_0.1)
+```
+
+## Discussion of results
+
+```{r}
+## Let us compare the two networks
+plot(infered_net_0.2,infered_net_0.1)
+```
+
+```{r}
+plot(infered_net_0.2,infered_net_0.1, type="overlap")
+```
+
+<p style='text-align: justify;'> The inferred network with a penalty of 0.2 has seven edges while the inferred network with a penalty of 0.1 has nine edges. </p>
+
+
