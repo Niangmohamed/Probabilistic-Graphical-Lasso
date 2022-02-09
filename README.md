@@ -1,2 +1,3 @@
 # Graphical Model
-Probabilistic Graphical Lasso
+
+Probabilistic Graphical Lasso.
